@@ -157,13 +157,6 @@ or build from **source code**:
 ```{code-block} bash
    :substitutions:
 
-# Set SOC_VERSION explicitly when building in a CPU-only environment or when npu-smi is unavailable.
-# Common values used by the official images are:
-#   Atlas A2 / 910B:   ascend910b1
-#   Atlas A3:          ascend910_9391
-#   Atlas 300I / 310P: ascend310p1
-export SOC_VERSION=ascend910b1
-
 # Install vLLM.
 git clone --depth 1 --branch |vllm_version| https://github.com/vllm-project/vllm
 cd vllm
@@ -174,11 +167,18 @@ cd ..
 git clone --depth 1 --branch |vllm_ascend_version| https://github.com/vllm-project/vllm-ascend.git
 cd vllm-ascend
 git submodule update --init --recursive
+
+# If building in a CPU-only environment (without NPU), you need to manually set SOC_VERSION.
+# For Atlas A2: export SOC_VERSION=ascend910b3  (or other A2 variants: ascend910b1, ascend910b2, ascend910b2c, ascend910b4, ascend910b4-1)
+# For Atlas A3: export SOC_VERSION=ascend910_9381  (or other A3 variants: ascend910_9391, ascend910_9372, ascend910_9392, ascend910_9382, ascend910_9362)
+# For Atlas 310P: export SOC_VERSION=ascend310p1 (or other 310P variants: ascend310p3, ascend310p3b, ascend310p4)
+# You can also refer to the Dockerfile for environment variable settings.
+# Example for A3:
+# export SOC_VERSION=ascend910_9381
+
 pip install -v -e .
 cd ..
 ```
-
-If `npu-smi` is not available during build, `setup.py` cannot detect the chip type automatically and will require `SOC_VERSION` to be set in advance. You can reuse the values from the official Dockerfiles in the repository root, for example `Dockerfile`, `Dockerfile.a3`, and `Dockerfile.310p`.
 
 If you are building custom operators for Atlas A3, you should run `git submodule update --init --recursive` manually, or ensure your environment has internet access.
 :::
@@ -314,25 +314,6 @@ Prompt: 'The president of the United States is', Generated text: ' a very import
 Prompt: 'The capital of France is', Generated text: ' Paris. The oldest part of the city is Saint-Germain-des-Pr'
 Prompt: 'The future of AI is', Generated text: ' not bright\n\nThere is no doubt that the evolution of AI will have a huge'
 ```
-
-### Build and environment FAQ
-
-If source installation fails before compilation starts, check the following environment variables first:
-
-```bash
-# Required when npu-smi cannot be used during build.
-export SOC_VERSION=ascend910b1
-
-# Only needed when CANN is not installed at the default path.
-export ASCEND_HOME_PATH=/usr/local/Ascend/ascend-toolkit/latest
-
-# Useful when driver or toolkit libraries are installed in a custom location.
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/$(uname -m)-linux/lib64:$LD_LIBRARY_PATH
-```
-
-- `SOC_VERSION` controls which Ascend custom operators are built. Official image defaults are `ascend910b1` in `Dockerfile`, `ascend910_9391` in `Dockerfile.a3`, and `ascend310p1` in `Dockerfile.310p`.
-- `ASCEND_HOME_PATH` is optional if you use the default CANN installation path, but should be exported when your toolkit is installed elsewhere.
-- `TASK_QUEUE_ENABLE` and `OMP_NUM_THREADS` are also preset in the official Docker images. If you want to mirror the container environment during local debugging, refer to the Dockerfiles in the repository root.
 
 ## Multi-node Deployment
 

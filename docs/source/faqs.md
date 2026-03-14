@@ -2,6 +2,7 @@
 
 ## Version Specific FAQs
 
+- [[v0.16.0rc1] FAQ & Feedback](https://github.com/vllm-project/vllm-ascend/issues/6969)
 - [[v0.15.0rc1] FAQ & Feedback](https://github.com/vllm-project/vllm-ascend/issues/6838)
 - [[v0.13.0] FAQ & Feedback](https://github.com/vllm-project/vllm-ascend/issues/6583)
 
@@ -269,3 +270,54 @@ bash tools/install_flash_infer_attention_score_ops_a2.sh
 
 **NOTE**: Don't set `additional_config.pa_shape_list` when using this method; otherwise, it will lead to another attention operator.
 **Important**: Please make sure you're using the **official image** of `vllm-ascend`; otherwise, you **must change** the directory `/vllm-workspace` in `tools/install_flash_infer_attention_score_ops_a2.sh` or `tools/install_flash_infer_attention_score_ops_a3.sh` to your own, or create one. If you're not the root user, you need `sudo` **privileges** to run this script.
+
+### 23. How to set SOC_VERSION when building from source in a CPU-only environment?
+
+When building `vllm-ascend` from source in a CPU-only environment (without NPU hardware), you need to manually set the `SOC_VERSION` environment variable before installation. This is required because the installation script cannot automatically detect the chip type without access to NPU hardware.
+
+**Setting SOC_VERSION for different chip types:**
+
+For **Atlas A2** series, set one of:
+```bash
+export SOC_VERSION=ascend910b1
+export SOC_VERSION=ascend910b2
+export SOC_VERSION=ascend910b2c
+export SOC_VERSION=ascend910b3
+export SOC_VERSION=ascend910b4
+export SOC_VERSION=ascend910b4-1
+export SOC_VERSION=ascend910b
+export SOC_VERSION=ascend910c
+```
+
+For **Atlas A3** series, set one of:
+```bash
+export SOC_VERSION=ascend910_9391
+export SOC_VERSION=ascend910_9381
+export SOC_VERSION=ascend910_9372
+export SOC_VERSION=ascend910_9392
+export SOC_VERSION=ascend910_9382
+export SOC_VERSION=ascend910_9362
+```
+
+For **Atlas 310P** series, set one of:
+```bash
+export SOC_VERSION=ascend310p1
+export SOC_VERSION=ascend310p3
+export SOC_VERSION=ascend310p3b
+export SOC_VERSION=ascend310p4
+```
+
+**Example installation:**
+```bash
+git clone https://github.com/vllm-project/vllm-ascend.git
+cd vllm-ascend
+git submodule update --init --recursive
+
+# Set SOC_VERSION for your target hardware
+export SOC_VERSION=ascend910_9381  # For Atlas A3
+
+# Install vllm-ascend
+pip install -v -e .
+```
+
+**Note:** You can also reference the [Dockerfile](https://github.com/vllm-project/vllm-ascend/blob/main/Dockerfile) for environment variable settings used in official images. For more information, see the [installation guide](https://docs.vllm.ai/projects/ascend/en/latest/getting_started/installation.html).
